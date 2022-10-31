@@ -71,8 +71,83 @@ def main():
 
     exit(0)
 
+
+def cb_receipt(err, msg):
+    """Receipt callback function for pushed messages.
+    """
+    logger = logging.getLogger()
+
+    if err is not None:
+        logger.error('{}'.format(err))
+    else:
+        message = 'Produced message. Topic: {}. Value: {}\n'.format(
+            msg.topic(), 
+            msg.value().decode('utf-8'))
+
+        logger.info(message)
+
+
+def push_messages(
+    bootstrap_servers='',
+    message_count=10, 
+    topic='test', 
+    sleep_time=3, 
+    receipt_callback=cb_receipt):
+    """Push a number of messages to a topic.
+
+    Arguments:
+    - bootstrap_servers: comma-separated list of Kafka listeners of the form host:port
+    - message_count: number of messages to send (minimum 1)
+    - topic: name of the topic
+    - sleep_time: interval between individual message send (in seconds)
+    - receipt_callback: callback function to process message receipts from the Kafka broker
+    """
+
+    logger = logging.getLogger()
+
+    logger.info('bootstrap_servers: ' + bootstrap_servers)
+    logger.info('message_count: ' + str(message_count))
+    logger.info('topic: ' + topic)
+    logger.info('sleep_time: ' + str(sleep_time))
+
+    # Get a Producer
+    p = init_producer(bootstrap_servers=bootstrap_servers)
+    if p is None:
+        logger.error("Unable to obtain a Producer")
+        return
+
+    if message_count < 1:
+        logger.error("message_count was less than 1")
+        return
+
+    # Generate and push fake messages
+    for i in range(message_count):
+        msg = generate_message()
+
+        try:
+            # Poll to process any receipts for past sent messages
+            p.poll(1)
+
+            # Asynchronously send the generated message to the Kafka topic
+            p.produce(topic, msg.encode('utf-8'), callback=receipt_callback)
+
+        except KafkaException as e:
+            logger.exception(e)
+            p.flush()
+            return
+
+        # Sleep for an interval
+        time.sleep(sleep_time)
+
+    # Flush any remaining messages
+    p.flush()
+
+
 def init_producer(bootstrap_servers='') -> Producer:
     """Returns an initialized Kafka Producer connected to the specified broker.
+
+    Arguments:
+    - bootstrap_servers: comma-separated list of Kafka listeners of the form host:port
     """
 
     logger = logging.getLogger()
@@ -119,69 +194,3 @@ def generate_message() -> str:
         return msg
     except:
         return '{}'
-
-    
-def cb_receipt(err, msg):
-    """Receipt callback function for pushed messages.
-    """
-    logger = logging.getLogger()
-
-    if err is not None:
-        logger.error('{}'.format(err))
-    else:
-        message = 'Produced message. Topic: {}. Value: {}\n'.format(
-            msg.topic(), 
-            msg.value().decode('utf-8'))
-
-        logger.info(message)
-
-
-def push_messages(
-    bootstrap_servers='',
-    message_count=10, 
-    topic='test', 
-    sleep_time=3, 
-    receipt_callback=cb_receipt):
-    """Push a number of messages to a topic.
-    """
-
-    logger = logging.getLogger()
-
-    logger.info('bootstrap_servers: ' + bootstrap_servers)
-    logger.info('message_count: ' + str(message_count))
-    logger.info('topic: ' + topic)
-    logger.info('sleep_time: ' + str(sleep_time))
-
-    # Get a Producer
-    p = init_producer(bootstrap_servers=bootstrap_servers)
-    if p is None:
-        logger.error("Unable to obtain a Producer")
-        return
-
-    if message_count < 1:
-        logger.error("message_count was less than 1")
-        return
-
-    # Generate and push fake messages
-    for i in range(message_count):
-        msg = generate_message()
-
-        try:
-            # Poll to process any receipts for past sent messages
-            p.poll(1)
-
-            # Asynchronously send the generated message to the Kafka topic
-            p.produce(topic, msg.encode('utf-8'), callback=receipt_callback)
-
-        except KafkaException as e:
-            logger.exception(e)
-            p.flush()
-            return
-
-        # Sleep for an interval
-        time.sleep(sleep_time)
-
-    # Flush any remaining messages
-    p.flush()
-
-
