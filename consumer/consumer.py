@@ -69,6 +69,7 @@ def receive_messages(
     logger = logging.getLogger()
 
     logger.info('bootstrap_servers: ' + bootstrap_servers)
+    logger.info('timeout (seconds): ' + str(timeout_seconds))
     logger.info('topic: ' + topic)
 
     # Get a Consumer
