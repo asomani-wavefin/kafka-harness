@@ -156,7 +156,13 @@ def init_producer(bootstrap_servers='') -> Producer:
     # Instantiate a Producer object.
     try:
         p = Producer(
-            {'bootstrap.servers': bootstrap_servers})
+            {
+                'bootstrap.servers': bootstrap_servers,
+                'delivery.timeout.ms': settings.get('KAFKA_delivery.timeout.ms'),
+                'request.timeout.ms': settings.get('KAFKA_request.timeout.ms'),
+                'socket.connection.setup.timeout.ms': settings.get('KAFKA_socket.connection.setup.timeout.ms'),
+                'transaction.timeout.ms': settings.get('KAFKA_transaction.timeout.ms'),
+            })
         if p is None:
             logger.critical('Failed to initiate Kafka Producer!')
             return None
