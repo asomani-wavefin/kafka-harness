@@ -89,9 +89,9 @@ def cb_receipt(err, msg):
 
 def push_messages(
     bootstrap_servers='',
-    message_count=10, 
+    message_count=3, 
     topic='test', 
-    sleep_time=3, 
+    sleep_time=3,
     receipt_callback=cb_receipt):
     """Push a number of messages to a topic.
 
@@ -110,14 +110,30 @@ def push_messages(
     logger.info('topic: ' + topic)
     logger.info('sleep_time: ' + str(sleep_time))
 
-    # Get a Producer
-    p = init_producer(bootstrap_servers=bootstrap_servers)
-    if p is None:
-        logger.error("Unable to obtain a Producer")
+    if topic is None or len(topic) < 1:
+        err_msg = "topic cannot be blank"
+        logger.error(err_msg)
+        raise Exception(err_msg)
         return
 
     if message_count < 1:
-        logger.error("message_count was less than 1")
+        err_msg = "message_count was less than 1"
+        logger.error(err_msg)
+        raise Exception(err_msg)
+        return
+
+    # Get a Producer
+    if bootstrap_servers is None or len(bootstrap_servers) < 1:
+        err_msg = "bootstrap servers cannot be blank"
+        logger.error(err_msg)
+        raise Exception(err_msg)
+        return
+        
+    p = init_producer(bootstrap_servers=bootstrap_servers)
+    if p is None:
+        err_msg = "unable to obtain a Producer"
+        logger.error(err_msg)
+        raise Exception(err_msg)
         return
 
     # Generate and push fake messages
@@ -134,6 +150,7 @@ def push_messages(
         except KafkaException as e:
             logger.exception(e)
             p.flush()
+            raise e
             return
 
         # Sleep for an interval
@@ -156,7 +173,13 @@ def init_producer(bootstrap_servers='') -> Producer:
     # Instantiate a Producer object.
     try:
         p = Producer(
-            {'bootstrap.servers': bootstrap_servers})
+            {
+                'bootstrap.servers': bootstrap_servers,
+                'delivery.timeout.ms': settings.get('KAFKA_delivery.timeout.ms'),
+                'request.timeout.ms': settings.get('KAFKA_request.timeout.ms'),
+                'socket.connection.setup.timeout.ms': settings.get('KAFKA_socket.connection.setup.timeout.ms'),
+                'transaction.timeout.ms': settings.get('KAFKA_transaction.timeout.ms'),
+            })
         if p is None:
             logger.critical('Failed to initiate Kafka Producer!')
             return None
