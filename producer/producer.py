@@ -8,7 +8,7 @@ Available functions:
 
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from confluent_kafka import KafkaException, Producer
 from faker import Faker
@@ -20,11 +20,6 @@ import time
 # Local imports
 from .config import settings
 
-
-# CLI_DESCRIPTION = settings.get('CLI_DESCRIPTION')
-# CLI_PROG = settings.get('CLI_PROG')
-# STANDARD_LOG_LEVEL = settings.get('STANDARD_LOG_LEVEL') 
-# VERBOSE_LOG_LEVEL = settings.get('VERBOSE_LOG_LEVEL')
 
 def main():
     """Main execution path. Parses the command line and delegates.

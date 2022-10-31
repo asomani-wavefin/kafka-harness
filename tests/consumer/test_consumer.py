@@ -1,13 +1,14 @@
-# test_producer.py
+# test_consumer.py
 
 import pytest
 
-from producer.config import settings
-from producer.producer import init_producer, generate_message, push_messages
+from consumer.config import settings
+from consumer.consumer import init_consumer, receive_messages
 
-from confluent_kafka import KafkaException, Producer
+from confluent_kafka import KafkaException, Consumer
 
-def test_init_producer():
+
+def test_init_consumer():
     tests = [
         # TEST empty bootstrap server
         {
@@ -22,48 +23,38 @@ def test_init_producer():
         # TEST valid bootstrap server
         {
             'kwargs': {'bootstrap_servers': settings.get('ARG_BOOTSTRAP')},
-            'result_type': Producer
+            'result_type': Consumer
         }
     ]
 
-    _stadard_tests(tests, init_producer)
+    _stadard_tests(tests, init_consumer)
 
-def test_generate_message():
-    tests = [
-        # TEST empty params
-        {
-            'kwargs': {},
-            'result_type': str
-        }
-    ]
-
-    _stadard_tests(tests, generate_message)
-
-def test_push_messages():
+def test_receive_messages():
     tests = [
         # TEST empty params (no bootstrap server)
         {
             'kwargs': {},
             'exception': Exception
         },
-        # TEST message count less than 1
+        # TEST topic empty
         {
-            'kwargs': {'message_count': 0, 'sleep_time': 0},
+            'kwargs': {'bootstrap_servers': settings.get('ARG_BOOTSTRAP'), 'topic': ''},
             'exception': Exception
         },
-        # TEST blank topic
+        # TEST topic is None
         {
-            'kwargs': {'topic': None, 'sleep_time': 0},
+            'kwargs': {'bootstrap_servers': settings.get('ARG_BOOTSTRAP'), 'topic': None},
             'exception': Exception
         },
-        # TEST valid bootstrap servers
+        # TEST valid bootstrap servers and topic
         {
-            'kwargs': {'bootstrap_servers': settings.get('ARG_BOOTSTRAP')},
+            'kwargs': {'bootstrap_servers': settings.get('ARG_BOOTSTRAP'), 'topic': settings.get('ARG_TOPIC')},
             'result': None
         }
     ]
 
-    _stadard_tests(tests, push_messages)
+    _stadard_tests(tests, receive_messages)
+
 
 
 #######
