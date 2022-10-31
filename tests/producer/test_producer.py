@@ -1,4 +1,5 @@
-from ensurepip import bootstrap
+# test_producer.py
+
 import pytest
 
 from producer.config import settings
