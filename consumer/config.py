@@ -24,6 +24,7 @@ settings = {
 
     # Default values for command-line arguments
     'ARG_BOOTSTRAP': os.environ.get('CONSUMER_BOOTSTRAP', "localhost:9092"),
+    'ARG_TIMEOUT': os.environ.get('CONSUMER_TIMEOUT_SECONDS', 90),
     'ARG_TOPIC': os.environ.get('CONSUMER_TOPIC', 'wav-test'),
 
     # Kafka connection configuration

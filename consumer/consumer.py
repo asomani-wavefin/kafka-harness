@@ -11,6 +11,7 @@ Available functions:
 __version__ = "0.2.0"
 
 from confluent_kafka import KafkaException, Consumer
+from datetime import datetime
 import argparse
 import logging
 
@@ -33,6 +34,7 @@ def main():
 
     # Consumer variables
     parser.add_argument('--bootstrap', action="store", type=ascii, default=settings.get('ARG_BOOTSTRAP'), help="comma-separated list for bootstrap.servers")
+    parser.add_argument('--timeout', action="store", type=int, default=settings.get('ARG_TIMEOUT'), help="number of seconds before the consumer stops")
     parser.add_argument('--topic', action="store", type=ascii, default=settings.get('ARG_TOPIC'), help="topic from which messages will be received")
 
     # Parse the command line and call the command
@@ -46,7 +48,8 @@ def main():
         
         receive_messages(
             args.bootstrap.strip("\'"), 
-            args.topic.strip("\'"))
+            args.topic.strip("\'"),
+            args.timeout)
 
     except:
         print("An error occured")
@@ -60,7 +63,8 @@ def main():
 
 def receive_messages(
     bootstrap_servers='',
-    topic='test'):
+    topic='test',
+    timeout_seconds=30):
 
     logger = logging.getLogger()
 
@@ -90,7 +94,8 @@ def receive_messages(
             return
         c.subscribe([topic])
 
-        while True:
+        start_time = datetime.now()
+        while (datetime.now() - start_time).total_seconds() < timeout_seconds:
             msg = c.poll(1.0) #timeout
             if msg is None:
                 logger.debug('no message')
