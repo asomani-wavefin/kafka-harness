@@ -1,0 +1,42 @@
+version: '3'
+
+# Stands up a single node Kafka server and a single-node Zookeper for local development.
+#
+# HOSTS / PORTS
+# - Zookeeper client port (Docker network): zookeper:2181
+# - Zookeeper client port (host): localhost:22181
+#
+# - Kafka internal (Docker network) listening port: kafka:29092
+# - Kafka host listening port: localhost:9092
+
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.2.2
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_JMX_PORT: 9998
+    ports:
+      - 22181:2181
+      - 9998:9998
+  
+  kafka:
+    image: confluentinc/cp-kafka:7.2.2
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+      - 9999:9999
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL_PLAINTEXT://kafka:29092,HOST_PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL_PLAINTEXT:PLAINTEXT,HOST_PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL_PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9999
+      KAFKA_JMX_HOSTNAME: localhost
