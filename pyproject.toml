@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kafka-harness"
-version = "0.1.0"
+version = "0.2.0"
 description = "Dev harness for running local Kafka, producer, consumer."
 authors = ["Ayaz Somani <asomani@waveapps.com>"]
 
